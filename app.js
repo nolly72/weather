@@ -1,5 +1,5 @@
 // 1. КОНФИГУРАЦИЯ С ТВОИМ КЛЮЧОМ
-const API_KEY = 'a95a50822aa917e66ee9b03c4351e50baa42b187088c945539777a0685e5e5e5e'; // Твой ключ NollyApp
+const API_KEY = 'a95a50822aa917e66ee9b03c4351e50baa42b187088c945539777a0685e5eca3'; 
 let allCoins = [];
 let myChart = null;
 
@@ -40,13 +40,11 @@ function initNavigation() {
 async function fetchMarketData() {
     const grid = document.getElementById('cryptoGrid');
     try {
-        // Запрос ТОП-20 монет по капитализации
         const response = await fetch(`https://cryptocompare.com{API_KEY}`);
         const result = await response.json();
 
         if (result.Response === "Error") throw new Error(result.Message);
 
-        // Маппинг данных в наш формат
         allCoins = result.Data.map(item => ({
             id: item.CoinInfo.Name,
             symbol: item.CoinInfo.Name,
@@ -60,16 +58,15 @@ async function fetchMarketData() {
         renderDashboard();
         renderMarketTable();
         
-        // Рисуем график для первой монеты (обычно BTC)
         if (allCoins.length > 0) updateChart(allCoins[0]);
 
     } catch (error) {
         console.error("Критическая ошибка API:", error);
-        grid.innerHTML = `<div class="loader" style="color: #ef4444;">Ошибка: ${error.message}</div>`;
+        grid.innerHTML = `<div class="loader" style="color: #ef4444;">Ошибка API: Проверьте интернет или лимиты ключа.</div>`;
     }
 }
 
-// 4. ОТРИСОВКА КАРТОЧЕК (Раздел Обзор)
+// 4. ОТРИСОВКА КАРТОЧЕК
 function renderDashboard() {
     const grid = document.getElementById('cryptoGrid');
     if(!grid) return;
@@ -88,7 +85,7 @@ function renderDashboard() {
     `).join('');
 }
 
-// 5. ТАБЛИЦА РЫНКА (Раздел Рынок)
+// 5. ТАБЛИЦА РЫНКА
 function renderMarketTable() {
     const tableBody = document.getElementById('marketTableBody');
     if (!tableBody) return;
@@ -117,9 +114,7 @@ function selectCoin(symbol) {
     if (coin) {
         document.getElementById('chartTitle').innerText = `${coin.name} Trend (USD)`;
         updateChart(coin);
-        
-        // Ответ ИИ
-        showAiMessage(`Nolly: Анализирую ${coin.name}. Текущая рыночная цена $${coin.price.toLocaleString()}. Изменение за 24ч: ${coin.change.toFixed(2)}%.`);
+        showAiMessage(`Nolly AI: Анализирую ${coin.name}. Цена $${coin.price.toLocaleString()}.`);
     }
 }
 
@@ -128,15 +123,9 @@ function updateChart(coin) {
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Имитация данных для графика (бесплатный API CryptoCompare дает историю отдельным запросом)
     const dataPoints = Array.from({length: 15}, () => coin.price * (0.98 + Math.random() * 0.04));
-    
     if (myChart) myChart.destroy();
     
-    const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -147,7 +136,7 @@ function updateChart(coin) {
                 borderWidth: 4,
                 tension: 0.4,
                 fill: true,
-                backgroundColor: gradient,
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 pointRadius: 0
             }]
         },
@@ -155,10 +144,7 @@ function updateChart(coin) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { 
-                x: { display: false }, 
-                y: { grid: { color: '#f1f5f9' }, ticks: { font: { weight: '600' } } } 
-            }
+            scales: { x: { display: false }, y: { grid: { color: '#f1f5f9' } } }
         }
     });
 }
@@ -180,18 +166,15 @@ function showAiMessage(text) {
 document.getElementById('aiSendBtn').onclick = () => {
     const input = document.getElementById('aiInput');
     if (!input.value.trim()) return;
-    
     const chat = document.getElementById('aiMessages');
     const userDiv = document.createElement('div');
     userDiv.className = 'msg user';
     userDiv.innerText = input.value;
     chat.appendChild(userDiv);
-    
     const text = input.value;
     input.value = '';
-    
     setTimeout(() => {
-        showAiMessage(`Nolly: Хмм, твой запрос про "${text}" заставил меня задуматься. На рынке сейчас высокая волатильность, будь осторожен!`);
+        showAiMessage(`Nolly AI: Твой запрос про "${text}" принят! На рынке сейчас горячо.`);
     }, 1000);
 };
 
