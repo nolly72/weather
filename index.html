@@ -3,36 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOLLY CRYPTO | AI Dashboard</title>
+    <title>NOLLY CRYPTO | AI PRO Dashboard</title>
     
-    <!-- Подключаем мягкий шрифт Manrope -->
+    <!-- Шрифт Manrope -->
     <link href="https://googleapis.com" rel="stylesheet">
     
-    <!-- Библиотеки: Иконки и Графики -->
+    <!-- Библиотеки: Иконки и Графики (Надежные зеркала) -->
     <script src="https://unpkg.com"></script>
-    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем разделенные стили -->
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="ai-widget.css">
 </head>
 <body>
 
     <div class="app-container">
-        <!-- Кнопка меню для мобильных устройств -->
+        <!-- Кнопка мобильного меню -->
         <button class="menu-btn" id="menuBtn">
             <i data-lucide="menu"></i>
         </button>
 
-        <!-- Боковая панель (Sidebar) -->
+        <!-- Сайдбар -->
         <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i data-lucide="zap" class="logo-icon"></i>
                 <span>NOLLY <b>CRYPTO</b></span>
             </div>
-            <nav>
-                <a href="#dashboard" class="nav-link active"><i data-lucide="layout"></i> Обзор</a>
-                <a href="#market" class="nav-link"><i data-lucide="line-chart"></i> Рынок</a>
-                <a href="#favorites" class="nav-link"><i data-lucide="star"></i> Избранное</a>
-                <a href="#settings" class="nav-link"><i data-lucide="settings"></i> Настройки</a>
+            <nav id="mainNav">
+                <a href="#" class="nav-link active" data-section="dashboard"><i data-lucide="layout"></i> Обзор</a>
+                <a href="#" class="nav-link" data-section="market"><i data-lucide="line-chart"></i> Рынок</a>
+                <a href="#" class="nav-link" data-section="favorites"><i data-lucide="star"></i> Избранное</a>
+                <a href="#" class="nav-link" data-section="settings"><i data-lucide="settings"></i> Настройки</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="ai-badge-status">
@@ -46,54 +50,104 @@
             <header>
                 <div class="search-container">
                     <i data-lucide="search"></i>
-                    <input type="text" id="coinSearch" placeholder="Поиск монет (BTC, ETH, SOL)...">
+                    <input type="text" id="coinSearch" placeholder="Поиск активов (BTC, SOL, ETH)...">
                 </div>
                 <div class="user-block">
-                    <div class="theme-info">Live Market</div>
+                    <div class="theme-info">Pro Account</div>
                     <div class="avatar">
                         <img src="https://dicebear.com" alt="AI Avatar">
                     </div>
                 </div>
             </header>
 
-            <!-- Сетка с монетами -->
-            <section class="section" id="dashboard">
+            <!-- СЕКЦИЯ 1: ОБЗОР -->
+            <section class="content-section active" id="section-dashboard">
                 <div class="section-header">
-                    <h2>Популярные активы</h2>
-                    <p>Цены обновляются в реальном времени</p>
+                    <h2>Обзор рынка</h2>
+                    <p>Топ активных монет за последние 24 часа</p>
                 </div>
                 <div class="crypto-grid" id="cryptoGrid">
-                    <!-- Сюда JS вставит карточки -->
-                    <div class="loader">Загрузка данных...</div>
+                    <div class="loader">Подключение к API...</div>
                 </div>
-            </section>
-
-            <!-- Секция с графиком -->
-            <section class="section" id="market">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3 id="chartTitle">Bitcoin (USD) — 7 дней</h3>
-                        <div class="chart-period">Live Sparkline</div>
+                        <h3 id="chartTitle">Bitcoin Trend</h3>
+                        <div class="chart-period">7 Days Sparkline</div>
                     </div>
                     <div class="canvas-holder">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
             </section>
+
+            <!-- СЕКЦИЯ 2: РЫНОК -->
+            <section class="content-section" id="section-market">
+                <div class="section-header">
+                    <h2>Все котировки</h2>
+                    <p>Детальный список валютных пар</p>
+                </div>
+                <div class="market-table-wrapper">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th>Ассета</th>
+                                <th>Цена</th>
+                                <th>Изменение</th>
+                                <th>Капитализация</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketTableBody">
+                            <!-- Заполнится через JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- СЕКЦИЯ 3: ИЗБРАННОЕ -->
+            <section class="content-section" id="section-favorites">
+                <div class="section-header">
+                    <h2>Мой Watchlist</h2>
+                    <p>Активы, добавленные в избранное</p>
+                </div>
+                <div class="crypto-grid" id="favGrid">
+                    <div class="empty-msg">Здесь пока пусто. Нажмите на звездочку у монеты.</div>
+                </div>
+            </section>
+
+            <!-- СЕКЦИЯ 4: НАСТРОЙКИ -->
+            <section class="content-section" id="section-settings">
+                <div class="section-header">
+                    <h2>Настройки</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="set-card">
+                        <span>Тёмная тема</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    <div class="set-card">
+                        <span>Уведомления ИИ</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="set-card">
+                        <span>Валюта: USD</span>
+                        <i data-lucide="chevron-right"></i>
+                    </div>
+                </div>
+            </section>
         </main>
 
-        <!-- ИИ Ассистент (Виджет) -->
-        <div class="ai-widget-container" id="aiWidget">
+        <!-- ИИ Ассистент -->
+        <div class="ai-widget-container">
             <div class="ai-chat-window" id="aiChatWindow">
                 <div class="ai-chat-header">
-                    <span>Nolly AI Assistant</span>
+                    <span>Nolly AI Helper</span>
                     <button onclick="toggleAi()">×</button>
                 </div>
                 <div class="ai-chat-messages" id="aiMessages">
-                    <div class="msg bot">Привет! Я Nolly. Выбери любую монету, и я сделаю краткий технический анализ для тебя.</div>
+                    <div class="msg bot">Привет! Я Nolly. Могу проанализировать любую монету или переключить раздел. Что тебя интересует?</div>
                 </div>
                 <div class="ai-chat-input">
-                    <input type="text" id="aiInput" placeholder="Спроси о крипте...">
+                    <input type="text" id="aiInput" placeholder="Напиши мне...">
                     <button id="aiSendBtn"><i data-lucide="send"></i></button>
                 </div>
             </div>
@@ -103,11 +157,7 @@
         </div>
     </div>
 
-    <!-- Основной скрипт -->
+    <!-- Подключаем JavaScript -->
     <script src="app.js"></script>
-    <script>
-        // Активация иконок после загрузки
-        lucide.createIcons();
-    </script>
 </body>
 </html>

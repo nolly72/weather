@@ -1,191 +1,178 @@
-// 1. Инициализация иконок
-lucide.createIcons();
-
-let allCoins = []; // Хранилище для всех монет
-let myChart = null; // Объект графика
+// 1. Глобальные переменные
+let allCoins = [];
+let myChart = null;
 let favorites = JSON.parse(localStorage.getItem('nolly_favs')) || [];
 
-// 2. Мобильное меню (Sidebar)
-const menuBtn = document.getElementById('menuBtn');
-const sidebar = document.getElementById('sidebar');
-
-if(menuBtn) {
-    menuBtn.onclick = () => {
-        sidebar.classList.toggle('mobile-open');
-    };
-}
-
-// Закрытие меню при клике на ссылку (для мобилок)
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.onclick = () => sidebar.classList.remove('mobile-open');
+// Ждем загрузки библиотек и DOM
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    initNavigation();
+    fetchMarketData();
 });
 
-// 3. Работа с ИИ Виджетом
-function toggleAi() {
-    const chat = document.getElementById('aiChatWindow');
-    chat.classList.toggle('active');
+// 2. Навигация между разделами
+function initNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.content-section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('data-section');
+
+            // Переключаем активный класс у ссылок
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            // Переключаем видимость секций
+            sections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === `section-${targetId}`) {
+                    section.classList.add('active');
+                }
+            });
+
+            // Закрываем мобильное меню при клике
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        });
+    });
+
+    // Бургер-меню
+    const menuBtn = document.getElementById('menuBtn');
+    if(menuBtn) {
+        menuBtn.onclick = () => document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
 }
 
-// 4. Получение данных о рынке (CoinGecko API)
+// 3. Получение данных с CoinGecko
 async function fetchMarketData() {
-    const grid = document.getElementById('cryptoGrid');
     try {
-        // Запрашиваем топ-15 монет с данными для графиков (sparkline)
         const response = await fetch('https://coingecko.com');
         allCoins = await response.json();
         
-        renderCoins(allCoins);
+        renderDashboard(allCoins);
+        renderMarketTable(allCoins);
         
-        // По умолчанию рисуем график первой монеты (обычно BTC)
-        if(!myChart && allCoins.length > 0) {
-            updateChart(allCoins[0]);
-        }
+        // Рисуем начальный график (Bitcoin)
+        if (allCoins.length > 0) updateChart(allCoins[0]);
     } catch (error) {
-        grid.innerHTML = `<div class="error">Ошибка загрузки данных. Проверьте соединение.</div>`;
+        console.error("API Error:", error);
+        document.getElementById('cryptoGrid').innerHTML = "<p class='loader'>Ошибка сети. Попробуйте VPN.</p>";
     }
 }
 
-// 5. Отрисовка карточек монет
-function renderCoins(data) {
+// 4. Отрисовка карточек (Обзор)
+function renderDashboard(data) {
     const grid = document.getElementById('cryptoGrid');
-    grid.innerHTML = data.map(coin => {
-        const isFav = favorites.includes(coin.id) ? 'active' : '';
-        const priceChange = coin.price_change_percentage_24h || 0;
-        
-        return `
-            <div class="coin-card" onclick="selectCoin('${coin.id}')" id="card-${coin.id}">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <img src="${coin.image}" width="42" height="42" alt="${coin.name}">
-                    <span style="color: ${priceChange > 0 ? '#10b981' : '#ef4444'}; font-weight: 800; font-size: 14px;">
-                        ${priceChange > 0 ? '▲' : '▼'} ${Math.abs(priceChange).toFixed(2)}%
-                    </span>
-                </div>
-                <p style="color: var(--text-grey); font-size: 13px; font-weight: 600;">${coin.symbol.toUpperCase()} / USD</p>
-                <h3 style="font-size: 22px; margin-top: 5px;">$${coin.current_price.toLocaleString()}</h3>
+    grid.innerHTML = data.slice(0, 8).map(coin => `
+        <div class="coin-card" onclick="selectCoin('${coin.id}')">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <img src="${coin.image}" width="40" height="40">
+                <span style="color: ${coin.price_change_percentage_24h > 0 ? '#10b981' : '#ef4444'}; font-weight:800;">
+                    ${coin.price_change_percentage_24h?.toFixed(2)}%
+                </span>
             </div>
-        `;
-    }).join('');
+            <p style="color:var(--text-grey); font-size:12px; font-weight:700;">${coin.symbol.toUpperCase()}</p>
+            <h3 style="font-size:20px;">$${coin.current_price.toLocaleString()}</h3>
+        </div>
+    `).join('');
 }
 
-// 6. Выбор монеты и обновление аналитики
-function selectCoin(coinId) {
-    const coin = allCoins.find(c => c.id === coinId);
-    if(!coin) return;
-
-    // Подсветка активной карточки
-    document.querySelectorAll('.coin-card').forEach(c => c.classList.remove('active-coin'));
-    document.getElementById(`card-${coinId}`).classList.add('active-coin');
-
-    // Обновляем заголовок и график
-    document.getElementById('chartTitle').innerText = `${coin.name} (USD) — 7 дней`;
-    updateChart(coin);
-
-    // Логика ИИ ответа
-    sendAiMessage(coin);
+// 5. Таблица (Раздел Рынок)
+function renderMarketTable(data) {
+    const tableBody = document.getElementById('marketTableBody');
+    if(!tableBody) return;
+    tableBody.innerHTML = data.map(coin => `
+        <tr>
+            <td style="display:flex; align-items:center; gap:10px;">
+                <img src="${coin.image}" width="24"> ${coin.name}
+            </td>
+            <td>$${coin.current_price.toLocaleString()}</td>
+            <td style="color: ${coin.price_change_percentage_24h > 0 ? '#10b981' : '#ef4444'}">
+                ${coin.price_change_percentage_24h?.toFixed(2)}%
+            </td>
+            <td>$${(coin.market_cap / 1e9).toFixed(2)}B</td>
+        </tr>
+    `).join('');
 }
 
-// 7. Обновление графика (Chart.js)
+// 6. Обновление графика
+function selectCoin(id) {
+    const coin = allCoins.find(c => c.id === id);
+    if(coin) {
+        document.getElementById('chartTitle').innerText = `${coin.name} Trend`;
+        updateChart(coin);
+        // Сообщение от ИИ
+        const msg = `Nolly проанализировал ${coin.name}. Текущая цена $${coin.current_price}. Тренд ${coin.price_change_percentage_24h > 0 ? 'положительный' : 'негативный'}.`;
+        showAiMessage(msg);
+    }
+}
+
 function updateChart(coin) {
     const ctx = document.getElementById('mainChart').getContext('2d');
     const prices = coin.sparkline_in_7d.price;
-    const labels = prices.map((_, index) => index);
+    const labels = prices.map((_, i) => i);
 
-    if (myChart) {
-        myChart.destroy(); // Удаляем старый график перед созданием нового
-    }
-
-    // Создаем градиент для заливки под линией
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+    if (myChart) myChart.destroy();
 
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Цена',
                 data: prices,
                 borderColor: '#6366f1',
-                borderWidth: 4,
-                tension: 0.4, // Мягкая округлая линия
+                borderWidth: 3,
+                tension: 0.4,
                 fill: true,
-                backgroundColor: gradient,
-                pointRadius: 0,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#6366f1'
+                backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                pointRadius: 0
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1b2559',
-                    padding: 12,
-                    cornerRadius: 12,
-                    displayColors: false
-                }
-            },
-            scales: {
-                x: { display: false },
-                y: {
-                    grid: { color: '#f1f5f9', drawBorder: false },
-                    ticks: { color: '#a3aed0', font: { family: 'Manrope', weight: '600' } }
-                }
-            }
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { grid: { color: '#f1f5f9' } } }
         }
     });
 }
 
-// 8. ИИ Логика (Анализ монеты)
-function sendAiMessage(coin) {
-    const messages = document.getElementById('aiMessages');
-    const trend = coin.price_change_percentage_24h > 0 ? "положительную" : "отрицательную";
-    
-    const botMsg = document.createElement('div');
-    botMsg.className = 'msg bot';
-    botMsg.innerHTML = `<b>Анализ ${coin.name}:</b> Сейчас мы видим ${trend} динамику. Технически монета находится в фазе ${coin.price_change_percentage_24h > 2 ? 'активного роста' : 'ожидания'}. Следите за уровнем $${(coin.current_price * 1.05).toFixed(2)}.`;
-    
-    messages.appendChild(botMsg);
-    messages.scrollTop = messages.scrollHeight;
+// 7. ИИ Логика
+function toggleAi() {
+    document.getElementById('aiChatWindow').classList.toggle('active');
 }
 
-// Чат с пользователем
+function showAiMessage(text) {
+    const box = document.getElementById('aiMessages');
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.innerText = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
 document.getElementById('aiSendBtn').onclick = () => {
     const input = document.getElementById('aiInput');
-    const messages = document.getElementById('aiMessages');
-    if(!input.value.trim()) return;
-
-    const userMsg = document.createElement('div');
-    userMsg.className = 'msg user';
-    userMsg.innerText = input.value;
-    messages.appendChild(userMsg);
-
-    const val = input.value.toLowerCase();
+    if(!input.value) return;
+    
+    const box = document.getElementById('aiMessages');
+    const userDiv = document.createElement('div');
+    userDiv.className = 'msg user';
+    userDiv.innerText = input.value;
+    box.appendChild(userDiv);
+    
+    const userVal = input.value;
     input.value = '';
 
     setTimeout(() => {
-        const botMsg = document.createElement('div');
-        botMsg.className = 'msg bot';
-        botMsg.innerText = `Nolly проанализировал ваш запрос "${val}". Я рекомендую следить за волатильностью и не забывать про стоп-лоссы!`;
-        messages.appendChild(botMsg);
-        messages.scrollTop = messages.scrollHeight;
+        showAiMessage(`Я изучил твой запрос про "${userVal}". Мой совет: всегда проверяй RSI перед сделкой!`);
     }, 1000);
 };
 
-// 9. Поиск
+// 8. Поиск
 document.getElementById('coinSearch').addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    const filtered = allCoins.filter(c => 
-        c.name.toLowerCase().includes(query) || 
-        c.symbol.toLowerCase().includes(query)
-    );
-    renderCoins(filtered);
+    const val = e.target.value.toLowerCase();
+    const filtered = allCoins.filter(c => c.name.toLowerCase().includes(val));
+    renderDashboard(filtered);
 });
-
-// Запуск приложения
-fetchMarketData();
-// Обновляем данные каждую минуту
-setInterval(fetchMarketData, 60000);
