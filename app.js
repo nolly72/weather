@@ -1,81 +1,191 @@
-// 1. Инициализация иконок Lucide
+// 1. Инициализация иконок
 lucide.createIcons();
 
-// 2. Функция переключения чата
-function toggleChat() {
-    document.querySelector('.chat-window').classList.toggle('active');
+let allCoins = []; // Хранилище для всех монет
+let myChart = null; // Объект графика
+let favorites = JSON.parse(localStorage.getItem('nolly_favs')) || [];
+
+// 2. Мобильное меню (Sidebar)
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+
+if(menuBtn) {
+    menuBtn.onclick = () => {
+        sidebar.classList.toggle('mobile-open');
+    };
 }
 
-// 3. Получение реальных данных о крипте
-async function getCryptoData() {
-    const cryptoList = document.getElementById('crypto-list');
+// Закрытие меню при клике на ссылку (для мобилок)
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.onclick = () => sidebar.classList.remove('mobile-open');
+});
+
+// 3. Работа с ИИ Виджетом
+function toggleAi() {
+    const chat = document.getElementById('aiChatWindow');
+    chat.classList.toggle('active');
+}
+
+// 4. Получение данных о рынке (CoinGecko API)
+async function fetchMarketData() {
+    const grid = document.getElementById('cryptoGrid');
     try {
+        // Запрашиваем топ-15 монет с данными для графиков (sparkline)
         const response = await fetch('https://coingecko.com');
-        const data = await response.json();
+        allCoins = await response.json();
         
-        cryptoList.innerHTML = '';
-        data.forEach(coin => {
-            cryptoList.innerHTML += `
-                <div class="coin-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <img src="${coin.image}" width="45">
-                        <span style="font-weight:800; color:${coin.price_change_percentage_24h > 0 ? '#05cd99' : '#ee5d50'}">
-                            ${coin.price_change_percentage_24h.toFixed(1)}%
-                        </span>
-                    </div>
-                    <p style="color:var(--text-grey); font-weight:600; font-size:14px;">${coin.name}</p>
-                    <h2 style="margin-top:5px;">$${coin.current_price.toLocaleString()}</h2>
-                </div>
-            `;
-        });
-    } catch (e) {
-        cryptoList.innerHTML = '<p>Ошибка загрузки данных...</p>';
+        renderCoins(allCoins);
+        
+        // По умолчанию рисуем график первой монеты (обычно BTC)
+        if(!myChart && allCoins.length > 0) {
+            updateChart(allCoins[0]);
+        }
+    } catch (error) {
+        grid.innerHTML = `<div class="error">Ошибка загрузки данных. Проверьте соединение.</div>`;
     }
 }
 
-// 4. Отрисовка графика (Chart.js)
-const ctx = document.getElementById('marketChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-        datasets: [{
-            label: 'BTC Price',
-            data: [62000, 62500, 61800, 63000, 63400, 63200],
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            fill: true,
-            tension: 0.4, // Делает линию мягкой и округлой
-            borderWidth: 4,
-            pointRadius: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { grid: { display: false } },
-            y: { grid: { color: '#f0f0f0' } }
-        }
+// 5. Отрисовка карточек монет
+function renderCoins(data) {
+    const grid = document.getElementById('cryptoGrid');
+    grid.innerHTML = data.map(coin => {
+        const isFav = favorites.includes(coin.id) ? 'active' : '';
+        const priceChange = coin.price_change_percentage_24h || 0;
+        
+        return `
+            <div class="coin-card" onclick="selectCoin('${coin.id}')" id="card-${coin.id}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <img src="${coin.image}" width="42" height="42" alt="${coin.name}">
+                    <span style="color: ${priceChange > 0 ? '#10b981' : '#ef4444'}; font-weight: 800; font-size: 14px;">
+                        ${priceChange > 0 ? '▲' : '▼'} ${Math.abs(priceChange).toFixed(2)}%
+                    </span>
+                </div>
+                <p style="color: var(--text-grey); font-size: 13px; font-weight: 600;">${coin.symbol.toUpperCase()} / USD</p>
+                <h3 style="font-size: 22px; margin-top: 5px;">$${coin.current_price.toLocaleString()}</h3>
+            </div>
+        `;
+    }).join('');
+}
+
+// 6. Выбор монеты и обновление аналитики
+function selectCoin(coinId) {
+    const coin = allCoins.find(c => c.id === coinId);
+    if(!coin) return;
+
+    // Подсветка активной карточки
+    document.querySelectorAll('.coin-card').forEach(c => c.classList.remove('active-coin'));
+    document.getElementById(`card-${coinId}`).classList.add('active-coin');
+
+    // Обновляем заголовок и график
+    document.getElementById('chartTitle').innerText = `${coin.name} (USD) — 7 дней`;
+    updateChart(coin);
+
+    // Логика ИИ ответа
+    sendAiMessage(coin);
+}
+
+// 7. Обновление графика (Chart.js)
+function updateChart(coin) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const prices = coin.sparkline_in_7d.price;
+    const labels = prices.map((_, index) => index);
+
+    if (myChart) {
+        myChart.destroy(); // Удаляем старый график перед созданием нового
     }
-});
 
-// 5. Простая логика чата
-document.getElementById('sendMsg').addEventListener('click', () => {
-    const input = document.getElementById('chatInput');
-    const body = document.getElementById('chatBody');
-    if(!input.value) return;
+    // Создаем градиент для заливки под линией
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
 
-    body.innerHTML += `<div class="msg user">${input.value}</div>`;
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Цена',
+                data: prices,
+                borderColor: '#6366f1',
+                borderWidth: 4,
+                tension: 0.4, // Мягкая округлая линия
+                fill: true,
+                backgroundColor: gradient,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#6366f1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1b2559',
+                    padding: 12,
+                    cornerRadius: 12,
+                    displayColors: false
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: {
+                    grid: { color: '#f1f5f9', drawBorder: false },
+                    ticks: { color: '#a3aed0', font: { family: 'Manrope', weight: '600' } }
+                }
+            }
+        }
+    });
+}
+
+// 8. ИИ Логика (Анализ монеты)
+function sendAiMessage(coin) {
+    const messages = document.getElementById('aiMessages');
+    const trend = coin.price_change_percentage_24h > 0 ? "положительную" : "отрицательную";
     
-    setTimeout(() => {
-        body.innerHTML += `<div class="msg bot">Анализирую данные по запросу "${input.value}"... Прогноз благоприятный.</div>`;
-        body.scrollTop = body.scrollHeight;
-    }, 1000);
+    const botMsg = document.createElement('div');
+    botMsg.className = 'msg bot';
+    botMsg.innerHTML = `<b>Анализ ${coin.name}:</b> Сейчас мы видим ${trend} динамику. Технически монета находится в фазе ${coin.price_change_percentage_24h > 2 ? 'активного роста' : 'ожидания'}. Следите за уровнем $${(coin.current_price * 1.05).toFixed(2)}.`;
     
+    messages.appendChild(botMsg);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+// Чат с пользователем
+document.getElementById('aiSendBtn').onclick = () => {
+    const input = document.getElementById('aiInput');
+    const messages = document.getElementById('aiMessages');
+    if(!input.value.trim()) return;
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg user';
+    userMsg.innerText = input.value;
+    messages.appendChild(userMsg);
+
+    const val = input.value.toLowerCase();
     input.value = '';
+
+    setTimeout(() => {
+        const botMsg = document.createElement('div');
+        botMsg.className = 'msg bot';
+        botMsg.innerText = `Nolly проанализировал ваш запрос "${val}". Я рекомендую следить за волатильностью и не забывать про стоп-лоссы!`;
+        messages.appendChild(botMsg);
+        messages.scrollTop = messages.scrollHeight;
+    }, 1000);
+};
+
+// 9. Поиск
+document.getElementById('coinSearch').addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    const filtered = allCoins.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.symbol.toLowerCase().includes(query)
+    );
+    renderCoins(filtered);
 });
 
-// Старт
-getCryptoData();
+// Запуск приложения
+fetchMarketData();
+// Обновляем данные каждую минуту
+setInterval(fetchMarketData, 60000);

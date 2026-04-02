@@ -1,11 +1,16 @@
+/* 1. Глобальные настройки и шрифт */
 :root {
     --bg: #f4f7fe;
     --white: #ffffff;
-    --accent: #6366f1;
+    --primary: #6366f1;
+    --primary-soft: #eef2ff;
+    --accent: #a855f7;
     --text-main: #1b2559;
     --text-grey: #a3aed0;
-    --radius-xl: 30px; /* Очень мягкие углы */
+    --radius-xl: 32px; /* Максимальная мягкость */
     --radius-m: 18px;
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -13,6 +18,11 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Manrope', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Убирает синий блик на телефонах */
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
@@ -21,14 +31,15 @@ body {
     overflow-x: hidden;
 }
 
-.app-wrapper {
+/* 2. Контейнер приложения */
+.app-container {
     display: flex;
     padding: 20px;
     gap: 20px;
     min-height: 100vh;
 }
 
-/* Sidebar */
+/* 3. Боковая панель (Sidebar) */
 .sidebar {
     width: 280px;
     background: var(--white);
@@ -36,130 +47,324 @@ body {
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 24px;
+    gap: 12px;
+    font-size: 22px;
     font-weight: 800;
-    color: var(--accent);
     margin-bottom: 50px;
     padding-left: 15px;
+    color: var(--primary);
 }
 
-.sidebar nav a {
+.nav-link {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 18px;
+    padding: 18px 20px;
     text-decoration: none;
     color: var(--text-grey);
     font-weight: 600;
     border-radius: var(--radius-m);
-    transition: 0.3s;
+    transition: var(--transition);
+    margin-bottom: 8px;
 }
 
-.sidebar nav a.active, .sidebar nav a:hover {
+.nav-link.active, .nav-link:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 20px;
     background: var(--bg);
-    color: var(--accent);
+    border-radius: var(--radius-m);
 }
 
-/* Main Content */
+.ai-badge-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* 4. Основной контент */
 .main-content {
     flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 30px;
     align-items: center;
+    margin-bottom: 30px;
+    gap: 20px;
 }
 
-.subtitle { color: var(--text-grey); margin-top: 5px; }
-
-.ai-badge {
-    background: #e0e7ff;
-    color: var(--accent);
-    padding: 8px 16px;
+.search-container {
+    background: var(--white);
+    flex: 1;
+    padding: 15px 25px;
     border-radius: 50px;
-    font-weight: 800;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: var(--shadow);
 }
 
-.avatar { width: 50px; border-radius: 15px; background: #fff; }
+.search-container input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 500;
+}
 
-.header-actions { display: flex; align-items: center; gap: 20px; }
+.user-block {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-/* Crypto Cards */
+.theme-info {
+    background: var(--primary);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: white;
+}
+
+/* 5. Сетка карточек */
 .crypto-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 20px;
-    margin-bottom: 30px;
+    margin-top: 20px;
 }
 
 .coin-card {
     background: var(--white);
-    padding: 25px;
-    border-radius: var(--radius-xl);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.02);
-    transition: 0.3s;
-}
-
-.coin-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-
-/* Chart Area */
-.chart-container {
-    background: var(--white);
     padding: 30px;
     border-radius: var(--radius-xl);
-    height: 400px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    border: 2px solid transparent;
 }
 
-/* AI Chat Window */
-.ai-chat {
+.coin-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--primary-soft);
+}
+
+.coin-card.active-coin {
+    border-color: var(--primary);
+}
+
+/* 6. График */
+.chart-card {
+    background: var(--white);
+    margin-top: 30px;
+    padding: 35px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.canvas-holder {
+    height: 350px;
+    width: 100%;
+}
+
+/* 7. ИИ Виджет */
+.ai-widget-container {
     position: fixed;
     bottom: 30px;
     right: 30px;
     z-index: 1000;
 }
 
-.chat-toggle {
-    width: 60px;
-    height: 60px;
-    background: var(--accent);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.ai-toggle-btn {
+    width: 70px;
+    height: 70px;
+    background: var(--primary);
     color: white;
+    border: none;
+    border-radius: 24px;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
+    transition: var(--transition);
 }
 
-.chat-window {
-    display: none; /* Переключим через JS */
+.ai-chat-window {
     position: absolute;
-    bottom: 80px;
+    bottom: 90px;
     right: 0;
-    width: 300px;
+    width: 340px;
     background: white;
     border-radius: var(--radius-xl);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
     overflow: hidden;
 }
 
-.chat-window.active { display: block; }
+.ai-chat-window.active {
+    display: flex;
+    animation: slideUp 0.4s ease;
+}
 
-.chat-header { background: var(--accent); color: white; padding: 20px; font-weight: 700; }
-.chat-body { height: 250px; padding: 20px; overflow-y: auto; background: #fdfdff; }
-.msg { padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; font-size: 13px; max-width: 80%; }
-.msg.bot { background: var(--bg); border-bottom-left-radius: 2px; }
-.msg.user { background: var(--accent); color: white; margin-left: auto; border-bottom-right-radius: 2px; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-.chat-input { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #eee; }
-.chat-input input { flex: 1; border: none; background: var(--bg); padding: 10px; border-radius: 10px; outline: none; }
-.chat-input button { border: none; background: none; color: var(--accent); cursor: pointer; }
+.ai-chat-header {
+    background: var(--primary);
+    color: white;
+    padding: 20px;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+}
+
+.ai-chat-messages {
+    height: 300px;
+    padding: 20px;
+    overflow-y: auto;
+    background: #fdfdff;
+}
+
+.msg {
+    padding: 12px 16px;
+    border-radius: 18px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.msg.bot {
+    background: var(--bg);
+    color: var(--text-main);
+    border-bottom-left-radius: 4px;
+}
+
+.msg.user {
+    background: var(--primary);
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.ai-chat-input {
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.ai-chat-input input {
+    flex: 1;
+    border: none;
+    background: var(--bg);
+    padding: 12px 18px;
+    border-radius: 50px;
+    outline: none;
+}
+
+.ai-chat-input button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* 8. Мобильная адаптация */
+.menu-btn {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    background: var(--white);
+    border: none;
+    padding: 12px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 1024px) {
+    .sidebar {
+        position: fixed;
+        left: -320px;
+        height: calc(100vh - 40px);
+        z-index: 1050;
+    }
+    .sidebar.mobile-open {
+        left: 20px;
+    }
+    .menu-btn {
+        display: block;
+    }
+    .main-content {
+        padding-top: 60px;
+    }
+}
+
+@media (max-width: 680px) {
+    header {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .search-container {
+        width: 100%;
+    }
+    .crypto-grid {
+        grid-template-columns: 1fr;
+    }
+    .ai-chat-window {
+        width: calc(100vw - 40px);
+        right: -10px;
+    }
+}

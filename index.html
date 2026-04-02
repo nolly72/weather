@@ -5,79 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NOLLY CRYPTO | AI Dashboard</title>
     
-    <!-- Мягкий шрифт Manrope -->
+    <!-- Подключаем мягкий шрифт Manrope -->
     <link href="https://googleapis.com" rel="stylesheet">
     
-    <!-- Иконки Lucide (библиотека) -->
+    <!-- Библиотеки: Иконки и Графики -->
     <script src="https://unpkg.com"></script>
-    
-    <!-- Chart.js (библиотека для графиков) -->
     <script src="https://jsdelivr.net"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="app-wrapper">
-        <!-- Боковое меню -->
-        <aside class="sidebar">
+    <div class="app-container">
+        <!-- Кнопка меню для мобильных устройств -->
+        <button class="menu-btn" id="menuBtn">
+            <i data-lucide="menu"></i>
+        </button>
+
+        <!-- Боковая панель (Sidebar) -->
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i data-lucide="zap" class="logo-icon"></i>
-                <span>NOLLY</span>
+                <span>NOLLY <b>CRYPTO</b></span>
             </div>
             <nav>
-                <a href="#" class="active"><i data-lucide="layout-dashboard"></i> Дашборд</a>
-                <a href="#"><i data-lucide="wallet"></i> Кошелек</a>
-                <a href="#"><i data-lucide="trending-up"></i> Рынок</a>
-                <a href="#"><i data-lucide="settings"></i> Настройки</a>
+                <a href="#dashboard" class="nav-link active"><i data-lucide="layout"></i> Обзор</a>
+                <a href="#market" class="nav-link"><i data-lucide="line-chart"></i> Рынок</a>
+                <a href="#favorites" class="nav-link"><i data-lucide="star"></i> Избранное</a>
+                <a href="#settings" class="nav-link"><i data-lucide="settings"></i> Настройки</a>
             </nav>
+            <div class="sidebar-footer">
+                <div class="ai-badge-status">
+                    <span class="pulse-dot"></span> Nolly AI Online
+                </div>
+            </div>
         </aside>
 
-        <!-- Контент -->
+        <!-- Основной контент -->
         <main class="main-content">
             <header>
-                <div>
-                    <h1>Привет, Трейдер!</h1>
-                    <p class="subtitle">Твой ИИ-ассистент Nolly готов к работе.</p>
+                <div class="search-container">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="coinSearch" placeholder="Поиск монет (BTC, ETH, SOL)...">
                 </div>
-                <div class="header-actions">
-                    <div class="ai-badge">AI ACTIVE</div>
-                    <img src="https://dicebear.com" class="avatar">
+                <div class="user-block">
+                    <div class="theme-info">Live Market</div>
+                    <div class="avatar">
+                        <img src="https://dicebear.com" alt="AI Avatar">
+                    </div>
                 </div>
             </header>
 
-            <!-- Сетка крипты -->
-            <div class="crypto-grid" id="crypto-list">
-                <!-- Карточки загрузятся из JS -->
-            </div>
+            <!-- Сетка с монетами -->
+            <section class="section" id="dashboard">
+                <div class="section-header">
+                    <h2>Популярные активы</h2>
+                    <p>Цены обновляются в реальном времени</p>
+                </div>
+                <div class="crypto-grid" id="cryptoGrid">
+                    <!-- Сюда JS вставит карточки -->
+                    <div class="loader">Загрузка данных...</div>
+                </div>
+            </section>
 
             <!-- Секция с графиком -->
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3>Аналитика рынка (BTC)</h3>
+            <section class="section" id="market">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 id="chartTitle">Bitcoin (USD) — 7 дней</h3>
+                        <div class="chart-period">Live Sparkline</div>
+                    </div>
+                    <div class="canvas-holder">
+                        <canvas id="mainChart"></canvas>
+                    </div>
                 </div>
-                <canvas id="marketChart"></canvas>
-            </div>
+            </section>
         </main>
 
-        <!-- Чат с ИИ -->
-        <div class="ai-chat" id="aiChat">
-            <div class="chat-toggle" onclick="toggleChat()">
-                <i data-lucide="message-circle"></i>
-            </div>
-            <div class="chat-window">
-                <div class="chat-header">Nolly AI</div>
-                <div class="chat-body" id="chatBody">
-                    <div class="msg bot">Я проанализировал рынок. Сейчас удачное время для наблюдения за активами!</div>
+        <!-- ИИ Ассистент (Виджет) -->
+        <div class="ai-widget-container" id="aiWidget">
+            <div class="ai-chat-window" id="aiChatWindow">
+                <div class="ai-chat-header">
+                    <span>Nolly AI Assistant</span>
+                    <button onclick="toggleAi()">×</button>
                 </div>
-                <div class="chat-input">
-                    <input type="text" id="chatInput" placeholder="Спроси Nolly...">
-                    <button id="sendMsg"><i data-lucide="send"></i></button>
+                <div class="ai-chat-messages" id="aiMessages">
+                    <div class="msg bot">Привет! Я Nolly. Выбери любую монету, и я сделаю краткий технический анализ для тебя.</div>
+                </div>
+                <div class="ai-chat-input">
+                    <input type="text" id="aiInput" placeholder="Спроси о крипте...">
+                    <button id="aiSendBtn"><i data-lucide="send"></i></button>
                 </div>
             </div>
+            <button class="ai-toggle-btn" onclick="toggleAi()">
+                <i data-lucide="bot"></i>
+            </button>
         </div>
     </div>
 
+    <!-- Основной скрипт -->
     <script src="app.js"></script>
+    <script>
+        // Активация иконок после загрузки
+        lucide.createIcons();
+    </script>
 </body>
 </html>
