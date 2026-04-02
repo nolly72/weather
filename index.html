@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOLLY CRYPTO | AI Dashboard</title>
+    
+    <!-- Мягкий шрифт Manrope -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <!-- Иконки Lucide (библиотека) -->
+    <script src="https://unpkg.com"></script>
+    
+    <!-- Chart.js (библиотека для графиков) -->
+    <script src="https://jsdelivr.net"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <!-- Боковое меню -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="zap" class="logo-icon"></i>
+                <span>NOLLY</span>
+            </div>
+            <nav>
+                <a href="#" class="active"><i data-lucide="layout-dashboard"></i> Дашборд</a>
+                <a href="#"><i data-lucide="wallet"></i> Кошелек</a>
+                <a href="#"><i data-lucide="trending-up"></i> Рынок</a>
+                <a href="#"><i data-lucide="settings"></i> Настройки</a>
+            </nav>
+        </aside>
+
+        <!-- Контент -->
+        <main class="main-content">
+            <header>
+                <div>
+                    <h1>Привет, Трейдер!</h1>
+                    <p class="subtitle">Твой ИИ-ассистент Nolly готов к работе.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="ai-badge">AI ACTIVE</div>
+                    <img src="https://dicebear.com" class="avatar">
+                </div>
+            </header>
+
+            <!-- Сетка крипты -->
+            <div class="crypto-grid" id="crypto-list">
+                <!-- Карточки загрузятся из JS -->
+            </div>
+
+            <!-- Секция с графиком -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>Аналитика рынка (BTC)</h3>
+                </div>
+                <canvas id="marketChart"></canvas>
+            </div>
+        </main>
+
+        <!-- Чат с ИИ -->
+        <div class="ai-chat" id="aiChat">
+            <div class="chat-toggle" onclick="toggleChat()">
+                <i data-lucide="message-circle"></i>
+            </div>
+            <div class="chat-window">
+                <div class="chat-header">Nolly AI</div>
+                <div class="chat-body" id="chatBody">
+                    <div class="msg bot">Я проанализировал рынок. Сейчас удачное время для наблюдения за активами!</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Спроси Nolly...">
+                    <button id="sendMsg"><i data-lucide="send"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
